@@ -6,83 +6,110 @@ using Eigen::MatrixXd;
 using std::vector;
 using namespace std;
 
-Tools::Tools() {}
+namespace Tools {
+  VectorXd CalculateRMSE(const vector<VectorXd> &estimations,
+                         const vector<VectorXd> &ground_truth) {
+    VectorXd rmse(4);
+    rmse << 0, 0, 0, 0;
 
-Tools::~Tools() {}
+    // Check inputs
+    if (estimations.size() != ground_truth.size()
+        || estimations.size() == 0) {
+      cout << "Invalid estimation or ground_truth data" << endl;
+      return rmse;
+    }
 
-VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
-                              const vector<VectorXd> &ground_truth) {
-  VectorXd rmse(4);
-  rmse << 0,0,0,0;
+    // Calculate RMSE
+    for (int i = 0; i < estimations.size(); ++i) {
+      VectorXd res = estimations[i] - ground_truth[i];
+      res = res.array() * res.array();
+      rmse += res;
+    }
 
-  // TODO: YOUR CODE HERE
-  if(estimations.size() != ground_truth.size()
-     || estimations.size() == 0){
-    cout << "Invalid estimation or ground_truth data" << endl;
+    rmse /= estimations.size();
+    rmse = rmse.array().sqrt();
+
     return rmse;
   }
-  // check the validity of the following inputs:
-  //  * the estimation vector size should not be zero
-  //  * the estimation vector size should equal ground truth vector size
 
-  //accumulate squared residuals
-  for(int i=0; i < estimations.size(); ++i){
-    VectorXd res = estimations[i] - ground_truth[i];
-    res = res.array() * res.array();
-    rmse += res;
-  }
+  MatrixXd CalculateJacobian(const VectorXd &x_state) {
+    MatrixXd Hj(3, 4);
 
-  //calculate the mean
-  rmse /= estimations.size();
+    // Unpack the state vector
+    float px = x_state(0);
+    float py = x_state(1);
+    float vx = x_state(2);
+    float vy = x_state(3);
 
-  //calculate the squared root
-  rmse = rmse.array().sqrt();
+    // Calculate frequently used calculations
+    float px2 = px * px;
+    float py2 = py * py;
+    float ss = px2 + py2;
 
-  //return the result
-  return rmse;
-}
+    // Check division by zero
+    if (fabs(ss) < APPROX_ZERO) {
+      cout << "CalculateJacobian () - Error - Division by Zero" << endl;
+      ss = APPROX_ZERO;
+    }
 
-MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
-  /**
-  TODO:
-    * Calculate a Jacobian here.
-  */
+    float srss = sqrt(ss);
 
-  MatrixXd Hj(3,4);
+    // Create the Jacobian
+    Hj(0, 0) = px / srss;
+    Hj(0, 1) = py / srss;
+    Hj(0, 2) = 0;
+    Hj(0, 3) = 0;
 
-  //recover state parameters
-  float px = x_state(0);
-  float py = x_state(1);
-  float vx = x_state(2);
-  float vy = x_state(3);
+    Hj(1, 0) = -py / ss;
+    Hj(1, 1) = px / ss;
+    Hj(1, 2) = 0;
+    Hj(1, 3) = 0;
 
-  //compute the Jacobian matrix
-  float px2 = px * px;
-  float py2 = py * py;
-  float ss = px2 + py2;
-  float srss = sqrt(ss);
+    Hj(2, 0) = (py * (vx * py - px * vy)) / (ss * srss);
+    Hj(2, 1) = (px * (vy * px - py * vx)) / (ss * srss);
+    Hj(2, 2) = px / srss;
+    Hj(2, 3) = py / srss;
 
-  //check division by zero
-  if(fabs(ss) < 0.0001){
-    cout << "CalculateJacobian () - Error - Division by Zero" << endl;
     return Hj;
   }
 
-  //TODO: YOUR CODE HERE
-  Hj(0,0) = px / srss;
-  Hj(0,1) = py / srss;
-  Hj(0,2) = 0;
-  Hj(0,3) = 0;
+  void polar_to_cartesian(const MeasurementPackage &measurement_pack, double &px, double &py) {
+    double phi = measurement_pack.raw_measurements_[1];
 
-  Hj(1,0) = -py / ss;
-  Hj(1,1) = px / ss;
-  Hj(1,2) = 0;
-  Hj(1,3) = 0;
+    px = measurement_pack.raw_measurements_[0] * cos(phi);
+    py = measurement_pack.raw_measurements_[0] * sin(phi);
+  }
 
-  Hj(2,0) = (py * (vx * py - px * vy)) / (ss * srss);
-  Hj(2,1) = (px * (vy * px - py * vx)) / (ss * srss);
-  Hj(2,2) = px / srss;
-  Hj(2,3) = py / srss;
+  Eigen::VectorXd cartesian_to_polar(Eigen::VectorXd x) {
+    VectorXd z_pred(3);
 
-  return Hj;
+    // Unpack the state vector
+    double px = x(0);
+    double py = x(1);
+    double vx = x(2);
+    double vy = x(3);
+
+    if (fabs(px) < 0.0001) {
+      px = 0.0001;
+    }
+
+    // Convert from cartesian to polar
+    float px2 = px * px;
+    float py2 = py * py;
+    float rho = sqrt(px2 + py2);
+
+    // Avoid division by zero
+    if (fabs(rho) < 0.0001) {
+      rho = 0.0001;
+    }
+
+    double phi = atan(py / px);
+    double rho_dot = (px * vx + py * vy) / rho;
+
+    z_pred[0] = rho;
+    z_pred[1] = phi;
+    z_pred[2] = rho_dot;
+
+    return z_pred;
+  }
 }
