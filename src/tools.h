@@ -1,10 +1,12 @@
 #ifndef TOOLS_H_
 #define TOOLS_H_
+
 #include <vector>
 #include "Eigen/Dense"
 #include "measurement_package.h"
 
-#define APPROX_ZERO 0.0001
+const float APPROX_ZERO = 0.0001;   // avoid numerical stability issues, do not compare to zero
+const float LARGE_VAR = 999.0;      // large variance (i.e. uncertain)
 
 namespace Tools {
   //  Calculate RMSE
@@ -13,11 +15,11 @@ namespace Tools {
   // Calculate the Jacobian
   Eigen::MatrixXd CalculateJacobian(const Eigen::VectorXd& x_state);
 
-  // Convert from polar to cartesian coordinates
+  // Convert measurement from polar to cartesian coordinates
   void polar_to_cartesian(const MeasurementPackage& measurement_pack, double& px, double& py);
 
-  // Convert from cartesian to polar coordinates
-  Eigen::VectorXd cartesian_to_polar(Eigen::VectorXd x);
+  // Convert state from cartesian to polar coordinates
+  Eigen::VectorXd cartesian_to_polar(const Eigen::VectorXd x);
 };
 
 #endif /* TOOLS_H_ */

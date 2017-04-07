@@ -80,7 +80,7 @@ namespace Tools {
     py = measurement_pack.raw_measurements_[0] * sin(phi);
   }
 
-  Eigen::VectorXd cartesian_to_polar(Eigen::VectorXd x) {
+  Eigen::VectorXd cartesian_to_polar(const Eigen::VectorXd x) {
     VectorXd z_pred(3);
 
     // Unpack the state vector
@@ -89,8 +89,8 @@ namespace Tools {
     double vx = x(2);
     double vy = x(3);
 
-    if (fabs(px) < 0.0001) {
-      px = 0.0001;
+    if (fabs(px) < APPROX_ZERO) {
+      px = APPROX_ZERO;
     }
 
     // Convert from cartesian to polar
@@ -99,16 +99,13 @@ namespace Tools {
     float rho = sqrt(px2 + py2);
 
     // Avoid division by zero
-    if (fabs(rho) < 0.0001) {
-      rho = 0.0001;
+    if (fabs(rho) < APPROX_ZERO) {
+      rho = APPROX_ZERO;
     }
 
-    double phi = atan(py / px);
-    double rho_dot = (px * vx + py * vy) / rho;
-
     z_pred[0] = rho;
-    z_pred[1] = phi;
-    z_pred[2] = rho_dot;
+    z_pred[1] = atan(py / px);
+    z_pred[2] = (px * vx + py * vy) / rho;
 
     return z_pred;
   }
