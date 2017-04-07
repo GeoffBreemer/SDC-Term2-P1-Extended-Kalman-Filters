@@ -10,7 +10,7 @@ This document describes the submission for **Project 1: Extended Kalman Filters*
 The plots shown below were generated using the `ekf-visualization.ipynb` notebook, which was provided by Udacity.
 
 ## Running the Project
-Run the project from the `build` directory on the two data files using:
+Perform the `Basic Build Instructions` provided by Udacity. Then run the project from the `build` directory on the two data files using:
 
 `./ExtendedKF ../data/sample-laser-radar-measurement-data-1.txt ../output/output1.txt`
 
