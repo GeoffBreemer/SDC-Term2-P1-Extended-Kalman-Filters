@@ -36,23 +36,27 @@ namespace Tools {
     MatrixXd Hj(3, 4);
 
     // Unpack the state vector
-    float px = x_state(0);
-    float py = x_state(1);
-    float vx = x_state(2);
-    float vy = x_state(3);
+    double px = x_state(0);
+    double py = x_state(1);
+    double vx = x_state(2);
+    double vy = x_state(3);
 
     // Calculate frequently used calculations
-    float px2 = px * px;
-    float py2 = py * py;
-    float ss = px2 + py2;
+    double px2 = px * px;
+    double py2 = py * py;
 
-    // Check division by zero
-    if (fabs(ss) < APPROX_ZERO) {
-      cout << "CalculateJacobian () - Error - Division by Zero" << endl;
-      ss = APPROX_ZERO;
+    // If px2 is zero set it to a small value
+    if (fabs(px2) < APPROX_ZERO) {
+      px2 = APPROX_ZERO;
     }
 
-    float srss = sqrt(ss);
+    // If py2 is zero set it to a small value
+    if (fabs(py2) < APPROX_ZERO) {
+      py2 = APPROX_ZERO;
+    }
+
+    double ss = px2 + py2;
+    double srss = sqrt(ss);
 
     // Create the Jacobian
     Hj(0, 0) = px / srss;
@@ -94,9 +98,9 @@ namespace Tools {
     }
 
     // Convert from cartesian to polar
-    float px2 = px * px;
-    float py2 = py * py;
-    float rho = sqrt(px2 + py2);
+    double px2 = px * px;
+    double py2 = py * py;
+    double rho = sqrt(px2 + py2);
 
     // Avoid division by zero
     if (fabs(rho) < APPROX_ZERO) {
@@ -104,7 +108,7 @@ namespace Tools {
     }
 
     z_pred[0] = rho;
-    z_pred[1] = atan(py / px);
+    z_pred[1] = atan2(py, px);
     z_pred[2] = (px * vx + py * vy) / rho;
 
     return z_pred;

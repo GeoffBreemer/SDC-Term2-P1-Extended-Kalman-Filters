@@ -1,6 +1,5 @@
 #include "FusionEKF.h"
 #include "tools.h"
-#include "Eigen/Dense"
 #include <iostream>
 
 using namespace std;
@@ -42,17 +41,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // Convert radar measurement from polar to cartesian coordinates
       Tools::polar_to_cartesian(measurement_pack, px, py);
-
-      // If initial position values are zero use initial guesses
-      if(fabs(px) < APPROX_ZERO) {
-        px = 1;
-        ekf_.P_(0,0) = px;
-      }
-
-      if(fabs(py) < APPROX_ZERO) {
-        py = 1;
-        ekf_.P_(1,1) = py;
-      }
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       // No conversion required for lidar measurements
@@ -60,7 +48,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       py = measurement_pack.raw_measurements_[1];
     }
 
-    // Set initial state x to the first position measurement and zero velocity
+    // Set initial state x to the first measurement's position and zero velocity
     VectorXd tmpX = VectorXd(4);
     tmpX << px, py, 0, 0;
     ekf_.setx_(tmpX);

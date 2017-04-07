@@ -4,6 +4,8 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
+const double LARGE_VAR = 999.0;      // large variance
+
 KalmanFilter::KalmanFilter() {
   // Initialise variables
   x_ = VectorXd(4);
@@ -18,10 +20,9 @@ KalmanFilter::KalmanFilter() {
 
   P_ = MatrixXd(4, 4);
   P_ << 1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, LARGE_VAR, 0,
-          0, 0, 0, LARGE_VAR;
-
+        0, 1, 0, 0,
+        0, 0, LARGE_VAR, 0,
+        0, 0, 0, LARGE_VAR;
 }
 
 KalmanFilter::~KalmanFilter() {}
@@ -62,7 +63,7 @@ void KalmanFilter::Predict() {
 void KalmanFilter::Update(const VectorXd &z, const Eigen::MatrixXd &R, const Eigen::MatrixXd &H) {
   // Update the state using Kalman Filter equations (for lidar measurements)
   R_ = R;
-  H_ = H;
+  H_ = H;   // H should be the measurement matrix
 
   VectorXd z_pred = H * x_;
   Estimate(z, z_pred);
@@ -71,7 +72,7 @@ void KalmanFilter::Update(const VectorXd &z, const Eigen::MatrixXd &R, const Eig
 void KalmanFilter::UpdateEKF(const VectorXd &z, const Eigen::MatrixXd &R, const Eigen::MatrixXd &Hj) {
   // Update the state using Kalman Filter equations (for radar measurements)
   R_ = R;
-  H_ = Hj;
+  H_ = Hj;  // H should be the Jacobian
 
   // Convert current state from cartesian to polar
   VectorXd z_pred = Tools::cartesian_to_polar(x_);
@@ -80,8 +81,9 @@ void KalmanFilter::UpdateEKF(const VectorXd &z, const Eigen::MatrixXd &R, const 
 }
 
 void KalmanFilter::Estimate(const Eigen::VectorXd &z, const Eigen::VectorXd &z_pred) {
+  // Perform various matrix calculations
   VectorXd y = z - z_pred;
-  MatrixXd Ht = H_.transpose();     // H_ contains the Jacobian
+  MatrixXd Ht = H_.transpose();     // H_ contains the Jacobian (for radar) or H matrix (for lidar)
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();
   MatrixXd PHt = P_ * Ht;

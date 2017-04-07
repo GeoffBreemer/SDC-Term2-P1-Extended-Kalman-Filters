@@ -5,8 +5,7 @@
 #include "Eigen/Dense"
 #include "measurement_package.h"
 
-const float APPROX_ZERO = 0.0001;   // avoid numerical stability issues, do not compare to zero
-const float LARGE_VAR = 999.0;      // large variance (i.e. uncertain)
+const double APPROX_ZERO = 0.0001;   // avoid numerical stability issues: do not compare to zero
 
 namespace Tools {
   //  Calculate RMSE

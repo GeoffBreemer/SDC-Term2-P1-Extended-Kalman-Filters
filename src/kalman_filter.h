@@ -10,13 +10,12 @@ private:
   Eigen::VectorXd x_;   // state vector
   Eigen::MatrixXd F_;   // state transition matrix
   Eigen::MatrixXd Q_;   // process noise covariance matrix
+  Eigen::MatrixXd P_;   // state covariance matrix
 
   // Calculates the actual estimates of x and P
   void Estimate(const Eigen::VectorXd &z, const Eigen::VectorXd &z_pred);
 
 public:
-  Eigen::MatrixXd P_;   // state covariance matrix
-
   KalmanFilter();
   virtual ~KalmanFilter();
 

@@ -62,8 +62,8 @@ int main(int argc, char* argv[]) {
 
   check_files(in_file_, in_file_name_, out_file_, out_file_name_);
 
-  vector<MeasurementPackage> measurement_pack_list;
-  vector<GroundTruthPackage> gt_pack_list;
+  vector<MeasurementPackage> measurement_pack_list;     // measurements
+  vector<GroundTruthPackage> gt_pack_list;              // ground truths
   string line;
 
   // Prepare measurement packages for each line in the file
@@ -75,12 +75,9 @@ int main(int argc, char* argv[]) {
     istringstream iss(line);
     long long timestamp;
 
-    // Reads first element from the current line
     iss >> sensor_type;
     if (sensor_type.compare("L") == 0) {
-      // LASER MEASUREMENT
-
-      // Read measurements at this timestamp
+      // Read laser measurements at this timestamp
       meas_package.sensor_type_ = MeasurementPackage::LASER;
       meas_package.raw_measurements_ = VectorXd(2);
 
@@ -90,9 +87,7 @@ int main(int argc, char* argv[]) {
 
       meas_package.raw_measurements_ << x, y;
     } else if (sensor_type.compare("R") == 0) {
-      // RADAR MEASUREMENT
-
-      // Read measurements at this timestamp
+      // Read radar measurements at this timestamp
       meas_package.sensor_type_ = MeasurementPackage::RADAR;
       meas_package.raw_measurements_ = VectorXd(3);
 
@@ -127,10 +122,10 @@ int main(int argc, char* argv[]) {
   vector<VectorXd> estimations;
   vector<VectorXd> ground_truth;
 
-  // Call the EKF-based fusion for each measurement package
+  // Apply the Kalman Filter to each measurement package
   size_t N = measurement_pack_list.size();
   for (size_t k = 0; k < N; ++k) {
-    // start filtering from the second frame (the speed is unknown in the first frame)
+    // Process the current measurement
     fusionEKF.ProcessMeasurement(measurement_pack_list[k]);
 
     // Output the estimation
